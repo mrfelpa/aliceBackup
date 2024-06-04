@@ -412,7 +412,7 @@ if [ -n "$userAndHost" ]; then
     RSYNC_SEND "$userAndHost" "$backupRemoteDir" || DIE "Error. Aborting backup."
 else
     printf "\nBackup was not SENT TO SERVER!"
-    DIE "\nBackup was not SENT TO SERVER\nYou need to pass an argument to rsync! Example: rsync://root@192.168.30.28 .\n"
+    DIE "\nBackup was not SENT TO SERVER\nYou need to pass an argument to rsync Example: rsync://root@192.168.30.28 .\n"
 fi
 
 # Keep only the .snar HEADERS on the local machine
@@ -428,3 +428,14 @@ REMOVE_LOCAL_BACKUPS
 if [ -n "$deleteOlderBackups" ]; then
     DELETE_OLD_BACKUP_REMOTE_SERVER
 fi
+
+# Implement a complete log system and send it to the backup server along with the log
+# Create a log file
+logFile="${backupLocalDir}/alicebackup.log"
+# Write log entries
+echo "Backup started at $(date)" >> $logFile
+echo "Backup completed at $(date)" >> $logFile
+echo "Backup type: $(if [ -f ${backupLocalDir}/backup-full-${machineName}.snar ]; then echo 'Differential'; else echo 'Full'; fi)" >> $logFile
+echo "Backup size: $(du -sh ${backupLocalDir}/backup-full-${machineName}.tar.gz | cut -f1)" >> $logFile
+# Send log to the backup server
+RSYNC_SEND "$userAndHost" "$backupRemoteDir" || DIE "Error. Aborting backup."
